@@ -1,0 +1,94 @@
+<html>
+	<head>
+		<title>Decimal e Hexadecimal</title>
+	</head>
+	<body>
+		<script>
+			var inDecimal  = document.getElementById("input_decimal"),
+			    inHexadecimal  = document.getElementById("input_hexadecimal"),
+			    outDecimal = document.getElementById("output_decimal"),
+			    outHexadecimal = document.getElementById("output_hexadecimal");
+			const hex_table="0123456789ABCDEF";
+			function dec2hex(dec) {
+				return hex_table[Math.floor(dec/16)]+hex_table[dec%16];
+			}
+			function hex2dec(hex) {
+				let dec = 0;
+				const hl = hex.length - 1;
+				for (let i = 0; i < hex.length; i++) {
+					let f = hex_table.indexOf(hex[i]);
+					if (f < 0)
+						continue;
+					dec += f * Math.pow(16, hl-i);
+				}
+				return dec;
+			}
+			function hexConvert(input) {
+				let array=input.split(/[,.:; ]+/);
+				let alen=array.length-1;
+				let res="\n";
+				let item;
+				for (let i=0; i<array.length; i++) {
+					item=array[i];
+					res+=""+dec2hex(item)+(i!=alen?":":"");
+				}
+				res+="\t\t"+input+"\n";
+				return res;
+			}
+			function decConvert(input) {
+				let array=input.split(/[,.:; ]+/);
+				let alen=array.length-1;
+				let res="\n";
+				let item;
+				for (let i=0; i<array.length; i++) {
+					item=array[i];
+					res+=""+hex2dec(item)+(i!=alen?":":"");
+				}
+				res+="\t\t"+input+"\n";
+				return res;
+			}
+			function updateFields() {
+				    inDecimal  = document.getElementById("input_decimal");
+				    inHexadecimal  = document.getElementById("input_hexadecimal");
+				    outDecimal = document.getElementById("output_decimal");
+				    outHexadecimal = document.getElementById("output_hexadecimal");
+			}
+			function converterHexadecimal() {
+				updateFields();
+				let outputHexTxt = "";
+				let inputDecArray=inDecimal.value.split("\n");
+				for (let i=0; i < inputDecArray.length; i++){
+					let inputDecItem=inputDecArray[i];
+					outputHexTxt+=hexConvert(inputDecItem);
+				}
+				outHexadecimal.value=outputHexTxt;
+			}
+			function converterDecimal(){
+				updateFields();
+				let outputDecTxt="";
+				let inputHexArray=inHexadecimal.value.split("\n");
+				for (let i=0; i < inputHexArray.length; i++){
+					let inputHexItem=inputHexArray[i];
+					outputDecTxt+=decConvert(inputHexItem);
+				}
+				outDecimal.value = outputDecTxt;
+			}
+		</script>
+		<textarea id="input_decimal" style="width: 50%; height: 40%;">192.168.1.0
+10.0.0;1
+172 16,0:0
+0.0.0.0
+255.0.255.0</textarea><textarea id="input_hexadecimal" style="width: 50%; height: 40%;">C0.A8.01.00
+0A.00.00.01
+AC:10:00:00
+00 00 00 00
+FF,00,FF,00</textarea>
+		<br>
+		<button onclick="converterHexadecimal()" style="width: 50%;">Para Hexadecimal</button><button onclick="converterDecimal()" style="width: 50%;">Para Decimal</button>
+		<br>
+		<textarea id="output_hexadecimal" style="width: 50%; height: 40%;"></textarea><textarea id="output_decimal" style="width: 50%; height: 40%;"></textarea>
+		<br>
+		Github:
+		https:\\github.com\GaMaDeCa
+	</body>
+</html>

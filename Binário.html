@@ -1,0 +1,110 @@
+<html>
+	<head>
+		<title>Decimal e Bin&aacuterio</title>
+	</head>
+	<body>
+		<script>
+			var inDecimal  = document.getElementById("input_decimal"),
+			    inBinario  = document.getElementById("input_binario"),
+			    outDecimal = document.getElementById("output_decimal"),
+			    outBinario = document.getElementById("output_binario");
+			function gerarTabelaBin(num) {
+				let tabela = [];
+				for (let n = 0; n < num; n++){
+					let nmaior=num-n;
+					tabela[n]=Math.round(Math.pow(2, nmaior)) / 2;
+				}
+				return tabela;
+			}
+			// alert(gerarTabelaBin(8));
+			const bin8_table=gerarTabelaBin(8); // [128,64,32,16,8,4,2,1]
+			function dec2bin(dec) {
+				let bin="";
+				for (let b=0; b<bin8_table.length; b++) {
+					if (dec>=bin8_table[b]) {
+						dec-=bin8_table[b];
+						bin+="1";
+					} else {
+						bin+="0";
+					}
+				}
+				return bin;
+			}
+			function bin2dec(bin) {
+				let dec=0;
+				for (let b=0; b<bin8_table.length; b++) {
+					if (bin[b]=='1') {
+						dec+=bin8_table[b];
+					}
+				}
+				return dec;
+			}
+			function binConvert(input) {
+				let array=input.split(/[,.:; ]+/);
+				let alen=array.length-1;
+				let res="\n";
+				let item;
+				for (let i=0; i<array.length; i++) {
+					item=array[i];
+					res+=""+dec2bin(item)+(i!=alen?".":"");
+				}
+				res+="\t\t"+input+"\n";
+				return res;
+			}
+			function decConvert(input) {
+				let array=input.split(/[,.:; ]+/);
+				let alen=array.length-1;
+				let res="\n";
+				let item;
+				for (let i=0; i<array.length; i++) {
+					item=array[i];
+					res+=""+bin2dec(item)+(i!=alen?".":"");
+				}
+				res+="\t\t"+input+"\n";
+				return res;
+			}
+			function updateFields() {
+				    inDecimal  = document.getElementById("input_decimal");
+				    inBinario  = document.getElementById("input_binario");
+				    outDecimal = document.getElementById("output_decimal");
+				    outBinario = document.getElementById("output_binario");
+			}
+			function converterBinario() {
+				updateFields();
+				let outputBinTxt = "";
+				let inputDecArray=inDecimal.value.split("\n");
+				for (let i=0; i < inputDecArray.length; i++){
+					let inputDecItem=inputDecArray[i];
+					outputBinTxt+=binConvert(inputDecItem);
+				}
+				outBinario.value=outputBinTxt;
+			}
+			function converterDecimal(){
+				updateFields();
+				let outputDecTxt="";
+				let inputBinArray=inBinario.value.split("\n");
+				for (let i=0; i < inputBinArray.length; i++){
+					let inputBinItem=inputBinArray[i];
+					outputDecTxt+=decConvert(inputBinItem);
+				}
+				outDecimal.value = outputDecTxt;
+			}
+		</script>
+		<textarea id="input_decimal" style="width: 50%; height: 40%;">192.168.1.0
+10.0.0.1
+172.16.0.0
+0.0.0.0
+255.0.255.0</textarea><textarea id="input_binario" style="width: 50%; height: 40%;">11111111.11111111.11111111.00000000
+11111111.11111111.11111111.10000000
+11111111.11111111.11111111.11000000
+11111111.11111111.00000000.00000000
+11111111.11010101.10101000.00000110</textarea>
+		<br>
+		<button onclick="converterBinario()" style="width: 50%;">Para Bin&aacuterio</button><button onclick="converterDecimal()" style="width: 50%;">Para Decimal</button>
+		<br>
+		<textarea id="output_binario" style="width: 50%; height: 40%;"></textarea><textarea id="output_decimal" style="width: 50%; height: 40%;"></textarea>
+		<br>
+		Github:
+		https:\\github.com\GaMaDeCa
+	</body>
+</html>
