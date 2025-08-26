@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi"/>
+  <title>Web Term Tools</title>
+  <style>
+	#saida_historico {
+		max-height: 90%;
+		width: 95%;
+		overflow-y: scroll;
+		position: fixed;
+        padding-left: 20px;
+	}
+    #modo_acesso {
+      position: fixed;
+      bottom: 20px;
+      padding-left: 10px;
+    }
+    #entrada_comando {
+      position: fixed;
+      width: 95%;
+      bottom: 20px;
+      padding-left: 20px;
+    }
+  </style>
+</head>
+<body bgcolor="#FFFFFF">
+  <div id="saida_historico"><font color="red">---[!] [ Status = Desligado ]</font></div>
+  <input id="entrada_comando" type="text" autofocus></input>
+  <span id="modo_acesso">&gt</span>
+  <script src="utils/binario.js"></script>
+  <script src="utils/hexadecimal.js"></script>
+  <script src="utils/ip_tools.js"></script>
+  <script>
+  'use-scrict'; // Ativa o EVAL
+  function getElById(eid) {
+	return document.getElementById(eid);
+  }
+  function createEl(el) {
+	return document.createElement(el);
+  }
+  //alert(bin8_table);
+  function addEl(el1, el2) {
+	el1.appendChild(el2);
+	return el1;
+  }
+  const entradaCmd = getElById("entrada_comando"),
+		saidaHist = getElById("saida_historico"),
+		modoAcesso = getElById("modo_acesso");
+  saidaHist.removeChild(saidaHist.firstChild);
+  /* TODO
+  document.addEventListener('click', function() {
+       entradaCmd.focus();
+   });*/
+  let modificador = ">";
+  let historicoComandos = [], historicoIndice = -1;
+  function addCorTxt(cor, txt){
+	return "<font color=\""+cor+"\">"+txt+"</font>";
+  }
+  function addHistorico(dado) {
+	if (dado == undefined || dado == "undefined")
+		return;
+	saidaHist.innerHTML += dado + "<br>";
+	//addEl(saidaHist, addEl(espaco, elemento));
+  }
+  function fundo(cor){
+	document.body.style.backgroundColor=cor;
+  }
+  let cmdCor = "black", resCor="black", errCor="black";
+  function cmd(cor){
+   cmdCor=cor;
+  }
+  function res(cor){
+	resCor=cor;
+  }
+  function err(cor){
+	errCor=cor;
+  }
+  function atualizarModificador(novoModificador, novoEspaco) {
+	modificador = novoModificador;
+	modoAcesso.textContent = modificador;
+	entradaCmd.style.paddingLeft = novoEspaco;
+  }
+  const ajuda = "&gt Emulação Switch/Router(Limitado, só imita alguns comandos dos modos de acesso)<br>enable - Ativa o modo de execução privilegiada(EXEC PRIV) (Ficticia)<br>configure Terminal - Entra no modo de configuraçao global (Ficticio)<br>exit - Sai do modo atual para o anterior (Ficticio)<br><br>&gt Conversão Binária(Use os separadores \",.:; \" para varios numeros em sequencia)<br>BIN_TABLE8 - Tabela de binário 8 bits<br>dec2bin - Converte um numero decimal ASCII 0-255 para binário de 8 bits(dec2bin(255))<br>bin2dec - Converte um numero binário de 8 bits para decimal ASCII 0-255(bin2dec(\"11111111\") = 255)<br>pot - Potência(pot(2, 8) = 256)<br>contar(sequencia, caractere) - Conta quantos caracteres tem no texto(contar(\"11111000\", \"1\") = 5)<br><br>&gt Conversão Hexadecimal(Use os separadores \",.:; \" para varios numeros em sequencia)<br>HEX_TABLE - Tabela Hexadecimal(0-15, 16 números)<br>dec2hex - Converte decimal ASCII para hexadecimal(dex2hex(255) = FF)<br>hex2dec - Converte hexadecimal para decimal ASCII(hex2dec(\"FF\") = 255)<br><br>&gt Ferramentas IP(A Fazer)<br>reduz_ipv6 - Reduz o endereço IPv6(Aviso: contém erro ao reduzir zeros que estão sozinhos F:0:F -&gt F:F)<br>192 &amp 255 - Operador AND(Decimal &amp Decimal)<br>and(\"IP\", \"Mascara\") - Operador AND em lotes(ANDing), necessário colocar entre aspas cada endereço(and(\"192.168.0.1\", \"255.255.255.224\") = 192.168.0.0)<br>int2ip(-1062731775) - Converte o numero para endereço(int2ip(-1062731775) = \"192.168.0.1\")<br>ip2int(\"192.168.0.1\") - Converte o endereço IP para numero decimal(ip2int(\"192.168.0.1\") =-1062731775)<br>subnetBroadcast(\"192.168.1.0\", 24) - Calcula o ultimo endereco da rede dado uma mascara em bits(Broadcast = \"192.168.1.255\")<br><br>&gt Desenvolvedor<br>advanced - Modo de desenvolvedor(O tratamento de aspas é desativado, vc terá que inserir aspas por conta própria quando necessário, aspas podem impedir somas corretas, 255+4 = 2554)<br>fundo(\"black\") - Muda o fundo da tela(cores em ingles(red, black) ou hexadecimal #RGB(FF00FF = Roxo))<br>cmd(cor) - Muda a cor do texto de comando<br>res(cor) - Muda a cor do texto do resultado do comando<br>err(cor) - Muda a cor do texto de erro<br>clear ou cls - Limpa a tela e o historico de comandos";
+  let isPrivEXECModeEnabled = false,
+	  isGlobalConfigEnabled = false;
+  function evaluateCLI(comandoEntrada) {
+	let comando = comandoEntrada.trim();
+	if (comando == "?") {
+		return ajuda;
+	}
+	if (isPrivEXECModeEnabled) {
+		if (isGlobalConfigEnabled) {
+		} else {
+			let comandos = comando.split(" ");
+			if (comandos.length == 2) {
+				if (comandos[0].startsWith("conf") && comandos[1].startsWith("t")) {
+					isGlobalConfigEnabled = true;
+					atualizarModificador("(config)#", "70px");
+					return "";
+				}
+			}
+		}
+	} else {
+		if (comando.startsWith("ena")) {
+			isPrivEXECModeEnabled = true;
+			atualizarModificador("#", "20px");
+			return "";
+		}
+	}
+	if (comando == "exit" || comando == "ex") {
+		if (isGlobalConfigEnabled) {
+			isGlobalConfigEnabled = false;
+			atualizarModificador("#", "20px");
+			return "";
+		} else if (isPrivEXECModeEnabled) {
+			isPrivEXECModeEnabled = false;
+			atualizarModificador(">", "20px");
+			return "";
+		}
+	}
+	return undefined;
+  }
+  function insert(pos, txt, intxt) {
+	return intxt.slice(0, pos)+txt+intxt.slice(pos);
+  }
+  let autoAspas = true;
+  function evaluate(comando){
+	let evalCLI = evaluateCLI(comando);
+	if (evalCLI != undefined)
+		return evalCLI;
+	if (comando == "advanced") {
+		autoAspas = !autoAspas;
+		return "Status do Modo de Desenvolvedor: "+(autoAspas?"Desligado":"Ligado");
+	}
+	// Tratar aspas caso o usuário não conheça strings(ihhh, provavelmente vai dar erro para comandos mais complexos), deixar um comando para desativar/ativar o modo
+	// TODO > Corrigir algo(do nada isso parece que parou de funcionar??)
+	if (autoAspas){
+		let cs = comando.indexOf("(");
+		let ce = comando.indexOf(")");
+		if (cs != -1 && ce != -1 && comando.indexOf(",")==-1) {
+			if (comando.indexOf("(\"") == -1) {
+				comando=insert(cs+1, '"', comando);
+				ce ++;
+			}
+			if (comando.indexOf("\")") == -1)
+				comando=insert(ce, '"', comando);
+		}
+	}
+	if (comando == "clear" || comando == "cls"){
+		historicoComandos = [];
+		historicoIndice = -1;
+		saidaHist.innerHTML = "";
+		return "";
+	}
+	let resEval=eval(comando);
+	if (resEval == undefined || resEval == "undefined")
+		return "";
+	else
+		return resEval;
+  }
+  function print(txt) {
+	addHistorico(addCorTxt(resCor, txt));
+  }
+  console.log = print;
+  entradaCmd.addEventListener('keydown', function (evt) {
+      if (evt.key === 'ArrowUp') {
+        if (historicoComandos.length && historicoIndice > 0) {
+          historicoIndice--;
+          entradaCmd.value = historicoComandos[historicoIndice];
+          evt.preventDefault();
+        } else if (historicoIndice === -1 && historicoComandos.length) {
+          historicoIndice = historicoComandos.length - 1;
+          entradaCmd.value = historicoComandos[historicoIndice];
+          evt.preventDefault();
+        }
+      } else if (evt.key === 'ArrowDown') {
+        if (historicoComandos.length && historicoIndice < historicoComandos.length - 1) {
+          historicoIndice++;
+          entradaCmd.value = historicoComandos[historicoIndice];
+          evt.preventDefault();
+        } else if (historicoIndice === historicoComandos.length - 1) {
+          historicoIndice = -1;
+          entradaCmd.value = '';
+          evt.preventDefault();
+        }
+      } else if (evt.key === 'Enter' && !evt.shiftKey) {
+		evt.preventDefault();
+        const comando = entradaCmd.value;
+        addHistorico(addCorTxt(cmdCor, modificador + " " + comando));
+
+        try {
+          const resultado = evaluate(comando);
+          addHistorico(addCorTxt(resCor, String(resultado)));
+        } catch (erro) {
+		  addHistorico(addCorTxt(errCor, "Erro: " + erro.message));
+        }
+
+        // Salvar o historico
+		if (comando.trim() != "") {
+			historicoComandos.push(comando);
+			historicoIndice = -1;
+			entradaCmd.value = "";
+		}
+		saidaHist.scrollTop = saidaHist.scrollHeight;
+      }
+    });
+	addHistorico(addCorTxt("green", "---[+] [ Status = Ligado ]"));
+	if ((typeof MB == 'undefined') || (typeof MH == 'undefined') || (typeof MI == 'undefined')) {
+		addHistorico(addCorTxt("red", "---[!] [ Scripts Auxiliares Faltando ]"));
+	} else {
+		addHistorico(addCorTxt("green", "---[+] [ Scripts Auxiliares Carregados ]"));
+	}
+  </script>
+</body>
+</html>
